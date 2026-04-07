@@ -1,88 +1,58 @@
 # 🎹 Pianoverse Atmosphere FX
 
-A lightweight Tampermonkey script that adds immersive visual and audio effects to [pianoverse.net](https://pianoverse.net/).
+Add simple atmospheric effects to Pianoverse — rain, stars, and subtle motion.
 
-Created by **CharaChocolat =) Greetings**
+![Preview](assets/preview.gif)
 
 ---
 
 ## ✨ Features
 
-- 🌧️ Rain effect with optional splash particles
-- ⭐ Dynamic stars with interactive movement (click to change pattern)
-- ☄️ Random comet animation across the screen
-- 🎵 Soft UI sound feedback (designed to be pleasant and subtle)
-- 🧊 Glass-style control panel with blur effect
-- ⚠️ Smart warnings for conflicting effects
+- 🌧️ Rain with optional splash effect  
+- ⭐ Interactive star field (click to change pattern)  
+- ☄️ Occasional comet crossing the screen  
+- 🎵 Soft, non-intrusive UI sounds  
+- 🧊 Minimal glass-style control panel  
 
 ---
 
-## 🎛️ Controls
+## 🎛️ Usage
 
-A floating panel appears on the bottom-right of the screen with toggles:
+A small panel appears on the bottom-right:
 
-- **Stars** → Enables animated star field
-- **Rain** → Enables rain effect
-- **Splash** → Adds splash particles (requires Rain)
-- **Comet** → Enables occasional comet animation
+- **Stars** → enable star field  
+- **Rain** → enable rain  
+- **Splash** → requires rain  
+- **Comet** → random comet effect  
 
 ---
 
 ## ⚠️ Notes
 
-- Using **Stars + Rain together** may cause visual overlap
-- **Splash requires Rain** to be enabled
-- Effects are disabled by default for better user control
-
----
-
-## 🔊 Audio Design
-
-The UI uses soft synthesized tones instead of harsh clicks:
-- Startup sound: quick rising tone
-- Toggle sound: smooth dual-frequency tap
-
-Designed to feel light and non-intrusive.
+- Stars + Rain may visually overlap  
+- Splash only works with Rain enabled  
 
 ---
 
 ## 🚀 Installation
 
-1. Install **Tampermonkey** extension
-2. Click this link (or paste script manually):
-   - `pianoverse-atmosphere-fx.user.js`
-3. Open: https://pianoverse.net/
-4. Enable effects using the panel
+1. Install **Tampermonkey**  
+2. Enable **Developer Mode** in your browser (required for scripts to run properly)  
+   - Chrome: `chrome://extensions/` → toggle **Developer mode** (top right)  
+3. Add the script  
+4. Open https://pianoverse.net/  
+5. Enable effects from the panel  
 
 ---
 
-## 🛠️ How it Works
+## 🛠️ Tech
 
-- Uses **HTML Canvas** for rendering all visual effects
-- Independent rendering loops for:
-  - Stars
-  - Rain + Splash
-  - Comet
-- Lightweight physics simulation for natural motion
-- Web Audio API for UI feedback sounds
+- HTML Canvas  
+- Web Audio API  
+- Lightweight animation loops  
 
 ---
 
-## 💡 Future Ideas
-
-- Custom themes (color variations)
-- Wind affecting rain direction
-- Ambient background audio (optional)
-- Performance toggle (low/high)
-
----
-
-## 📜 License
-
-MIT License — feel free to use, modify and share.
-
----
-
-## ❤️ Credits
+## 👤 Author
 
 Created by **CharaChocolat =) Greetings**
