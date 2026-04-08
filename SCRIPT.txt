@@ -1,2 +1,0 @@
-// Paste this into Tampermonkey
-// Your full script here
