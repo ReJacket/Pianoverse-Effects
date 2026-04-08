@@ -3,7 +3,7 @@
 Add simple atmospheric effects to Pianoverse — rain, stars, and subtle motion.
 
 ![Preview](assets/preview.gif)
- PSSSHHT! Click in "Pianoverse-atmosphere-fx.uxer.js" and just copy the cody to use it :)
+ PSSSHHT! Click in "Pianoverse-atmosphere-fx.uxer.js" and just copy the code to use it :)
 ---
 
 ## ✨ Features
