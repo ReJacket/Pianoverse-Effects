@@ -1,7 +1,7 @@
 // ==UserScript==
-// @name         Pianoverse Atmosphere FX v13
+// @name         Pianoverse Atmosphere FX v13 (UI Slide + Save + Reactive Stars)
 // @namespace    http://tampermonkey.net/
-// @version      13.0
+// @version      13.4
 // @match        *://pianoverse.net/*
 // @grant        none
 // @creator      CharaChocolat =) greetings!
@@ -10,15 +10,37 @@
 (function() {
     'use strict';
 
-    // --- CONFIG ---
-    let effectsEnabled = {
-        rain: false,
-        splash: false,
-        stars: false,
-        comet: false
-    };
+    const STORAGE_KEY = "pv_fx_settings_v13";
 
-    // --- SOMS ---
+    let effectsEnabled = loadSettings();
+
+    function loadSettings(){
+        try{
+            const saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
+            return Object.assign({
+                rain:false,
+                splash:false,
+                stars:false,
+                comet:false,
+                simplify:false,
+                warnings:true
+            }, saved || {});
+        }catch{
+            return {
+                rain:false,
+                splash:false,
+                stars:false,
+                comet:false,
+                simplify:false,
+                warnings:true
+            };
+        }
+    }
+
+    function saveSettings(){
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(effectsEnabled));
+    }
+
     function playSoftClick(){
         const ctx = new (window.AudioContext || window.webkitAudioContext)();
         const o1 = ctx.createOscillator();
@@ -64,7 +86,6 @@
         o.stop(ctx.currentTime + 0.12);
     }
 
-    // --- AUDIO ANALYZER PARA ESTRELAS ---
     let audioCtx, analyser, dataArray;
 
     function setupAudioAnalysis(){
@@ -88,36 +109,71 @@
             sum += dataArray[i];
         }
 
-        return sum / dataArray.length / 255; // normalizado entre 0 e 1
+        return sum / dataArray.length / 255;
     }
 
-    // --- UI ---
     function createUI() {
+        const wrapper = document.createElement("div");
+
+        Object.assign(wrapper.style, {
+            position: "fixed",
+            right: "0px",
+            bottom: "160px",
+            zIndex: "9999",
+            display: "flex",
+            alignItems: "center"
+        });
+
+        const arrow = document.createElement("div");
+        arrow.innerText = "<";
+
+        Object.assign(arrow.style, {
+            background: "rgba(20,20,30,0.85)",
+            color: "white",
+            padding: "10px",
+            borderRadius: "12px 0 0 12px",
+            cursor: "pointer",
+            userSelect: "none"
+        });
+
         const panel = document.createElement("div");
 
         Object.assign(panel.style, {
-            position: "fixed",
-            right: "20px",
-            bottom: "100px",
-            padding: "12px",
-            borderRadius: "12px",
+            width: "0px",
+            overflow: "hidden",
+            borderRadius: "12px 0 0 12px",
             background: "rgba(20,20,30,0.75)",
             backdropFilter: "blur(12px)",
             border: "1px solid rgba(255,255,255,0.2)",
             color: "white",
             fontSize: "13px",
-            zIndex: "9999",
+            transition: "all 0.25s ease",
             fontFamily: "sans-serif"
         });
 
         panel.innerHTML = `
-            <label><input type="checkbox" id="fx-stars"> Stars</label><br>
-            <label><input type="checkbox" id="fx-rain"> Rain</label><br>
-            <label><input type="checkbox" id="fx-splash"> Splash</label><br>
-            <label><input type="checkbox" id="fx-comet"> Comet</label>
+            <div style="padding:12px;">
+                <label><input type="checkbox" id="fx-stars"> Stars</label><br>
+                <label><input type="checkbox" id="fx-rain"> Rain</label><br>
+                <label><input type="checkbox" id="fx-splash"> Splash</label><br>
+                <label><input type="checkbox" id="fx-comet"> Comet</label><br>
+                <label><input type="checkbox" id="fx-simplify"> Simple Effects</label><br>
+                <label><input type="checkbox" id="fx-warnings"> Disable Conflict Warnings</label>
+            </div>
         `;
 
-        document.body.appendChild(panel);
+        let open = false;
+
+        arrow.onclick = () => {
+            open = !open;
+            playSoftClick();
+            panel.style.width = open ? "200px" : "0px";
+            arrow.innerText = open ? ">" : "<";
+        };
+
+        wrapper.appendChild(panel);
+        wrapper.appendChild(arrow);
+        document.body.appendChild(wrapper);
 
         function createWarning(text, color, offset){
             const el = document.createElement("div");
@@ -170,6 +226,8 @@
         );
 
         function updateWarnings(){
+            if(!effectsEnabled.warnings) return;
+
             if(effectsEnabled.rain && effectsEnabled.stars){
                 redWarning();
             }
@@ -181,32 +239,35 @@
         greenWelcome();
         playStartupSound();
 
-        panel.querySelector("#fx-stars").onchange = e => {
-            playSoftClick();
-            effectsEnabled.stars = e.target.checked;
-            setupAudioAnalysis(); // ativa o analisador quando stars ligadas
-            updateWarnings();
+        const bind = (id, key, extra)=>{
+            const el = panel.querySelector(id);
+            el.checked = effectsEnabled[key];
+
+            el.onchange = e=>{
+                playSoftClick();
+                effectsEnabled[key] = e.target.checked;
+                saveSettings();
+                if(extra) extra(e);
+                updateWarnings();
+            };
         };
 
-        panel.querySelector("#fx-rain").onchange = e => {
-            playSoftClick();
-            effectsEnabled.rain = e.target.checked;
-            updateWarnings();
-        };
+        bind("#fx-stars","stars",()=>setupAudioAnalysis());
+        bind("#fx-rain","rain");
+        bind("#fx-splash","splash");
+        bind("#fx-comet","comet");
+        bind("#fx-simplify","simplify");
 
-        panel.querySelector("#fx-splash").onchange = e => {
-            playSoftClick();
-            effectsEnabled.splash = e.target.checked;
-            updateWarnings();
-        };
+        const warnToggle = panel.querySelector("#fx-warnings");
+        warnToggle.checked = !effectsEnabled.warnings;
 
-        panel.querySelector("#fx-comet").onchange = e => {
+        warnToggle.onchange = e=>{
             playSoftClick();
-            effectsEnabled.comet = e.target.checked;
+            effectsEnabled.warnings = !e.target.checked;
+            saveSettings();
         };
     }
 
-    // --- ESTRELAS ---
     function createStars(){
         const canvas = document.createElement("canvas");
         const ctx = canvas.getContext("2d");
@@ -232,6 +293,12 @@
         let stars = [];
         let mode = 0;
         let time = 0;
+
+        let keyImpulse = 0;
+
+        window.addEventListener("keydown", ()=>{
+            keyImpulse = 1;
+        });
 
         function spread(){
             stars.forEach(s=>{
@@ -278,12 +345,16 @@
 
             let audioLevel = getAudioLevel();
 
+            keyImpulse *= 0.9;
+
             for(let s of stars){
                 s.vx += (s.tx - s.x)*0.002;
                 s.vy += (s.ty - s.y)*0.002;
 
-                s.vx += Math.sin(time + s.x*0.01)*0.02 * (1 + audioLevel*2);
-                s.vy += Math.cos(time + s.y*0.01)*0.02 * (1 + audioLevel*2);
+                let boost = 1 + audioLevel*2 + keyImpulse*2;
+
+                s.vx += Math.sin(time + s.x*0.01)*0.02 * boost;
+                s.vy += Math.cos(time + s.y*0.01)*0.02 * boost;
 
                 s.x += s.vx;
                 s.y += s.vy;
@@ -293,9 +364,9 @@
 
                 ctx.beginPath();
                 ctx.fillStyle = `rgba(255,255,255,${s.alpha})`;
-                ctx.shadowBlur = 6 + audioLevel*10;
+                ctx.shadowBlur = 6 + audioLevel*10 + keyImpulse*10;
                 ctx.shadowColor = "white";
-                ctx.arc(s.x, s.y, s.size + audioLevel*3, 0, Math.PI*2);
+                ctx.arc(s.x, s.y, s.size + audioLevel*3 + keyImpulse*2, 0, Math.PI*2);
                 ctx.fill();
             }
 
@@ -305,7 +376,6 @@
         draw();
     }
 
-    // --- CHUVA & SPLASH ---
     function createRain(){
         const canvas=document.createElement("canvas");
         const ctx=canvas.getContext("2d");
@@ -329,7 +399,8 @@
 
         function createSplash(x,y){
             if(!effectsEnabled.splash) return;
-            for(let i=0;i<12;i++){
+            let amount = effectsEnabled.simplify ? 6 : 12;
+            for(let i=0;i<amount;i++){
                 splashes.push({x,y,vx:(Math.random()-0.5)*4,vy:-Math.random()*4,life:30});
             }
         }
@@ -338,7 +409,10 @@
             ctx.clearRect(0,0,canvas.width,canvas.height);
 
             if(effectsEnabled.rain){
-                ctx.strokeStyle="rgba(255,255,255,0.25)";
+                ctx.strokeStyle = effectsEnabled.simplify
+                    ? "rgba(255,255,255,0.15)"
+                    : "rgba(255,255,255,0.25)";
+
                 drops.forEach(d=>{
                     ctx.beginPath();
                     ctx.moveTo(d.x,d.y);
@@ -350,7 +424,7 @@
             }
 
             ctx.fillStyle="rgba(255,255,255,0.7)";
-            ctx.shadowBlur=15;
+            ctx.shadowBlur = effectsEnabled.simplify ? 6 : 15;
             ctx.shadowColor="white";
 
             for(let i=splashes.length-1;i>=0;i--){
@@ -367,7 +441,6 @@
         draw();
     }
 
-    // --- COMETA ---
     function createComet(){
         const canvas=document.createElement("canvas");
         const ctx=canvas.getContext("2d");
@@ -427,7 +500,6 @@
         draw();
     }
 
-    // --- INICIALIZAÇÃO ---
     createUI();
     createStars();
     createRain();
